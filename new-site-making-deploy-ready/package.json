@@ -7,7 +7,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "parcel index.html",
-    "build": "parcel build index.html"
+    "build": "parcel build index.html --no-cache --no-source-maps"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
