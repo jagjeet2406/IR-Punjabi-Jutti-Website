@@ -29,5 +29,11 @@ mongoose.connect(process.env.SERVER_KEY)
 
 app.use("/api/auth", authRoutes);
 
+
+app.post("/api/google-login", (req, res, next) => {
+  req.url = "/google-login";
+  authRoutes(req, res, next);
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
