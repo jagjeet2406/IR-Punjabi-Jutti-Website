@@ -66,10 +66,10 @@ router.post("/verify-payment", async (req, res) => {
             .update(`${razorpay_order_id}|${razorpay_payment_id}`)
             .digest("hex");
 
-        const isValid = crypto.timingSafeEqual(
-            Buffer.from(expectedSignature),
-            Buffer.from(razorpay_signature)
-        );
+        // timingSafeEqual throws if the lengths differ, so check that first.
+        const a = Buffer.from(expectedSignature);
+        const b = Buffer.from(String(razorpay_signature));
+        const isValid = a.length === b.length && crypto.timingSafeEqual(a, b);
 
         if (!isValid) {
             return res.status(400).json({ success: false, error: "Invalid signature" });
