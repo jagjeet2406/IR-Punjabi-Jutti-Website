@@ -13,6 +13,8 @@ const UserSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: true,
+        lowercase: true,   // "ABC@Gmail.com" and "abc@gmail.com" are the same account
+        trim: true,
     },
     phone: {
         type: Number,
