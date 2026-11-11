@@ -1,68 +1,28 @@
-const express = require("express");
-const router = express.Router();
-const Product = require("../models/Product");
+const mongoose = require("mongoose");
 
-// Admin key check middleware
-const adminAuth = (req, res, next) => {
-  if (req.headers["x-admin-key"] !== process.env.ADMIN_SECRET) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  next();
-};
+// Every category the shop sells. To add a brand-new category later, add it here,
+// to the admin portal dropdown, and to CATEGORY_CONFIG in src/productConfig.js.
+const CATEGORIES = ["men", "women", "kids", "wedding", "purse"];
 
-// GET all products — supports ?category=women or ?category=kids&subcategory=little-gabru
-router.get("/", async (req, res) => {
-  try {
-    const filter = {};
-    if (req.query.category) filter.category = req.query.category;
-    if (req.query.subcategory) filter.subcategory = req.query.subcategory;
-    const products = await Product.find(filter);
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+const productSchema = new mongoose.Schema({
+  link: { type: String, required: true },         // main image (kept as "link" to match existing data)
+  name: { type: String, required: true, trim: true },
+  price: { type: String, required: true },         // e.g. "₹299"
+  fake_price: { type: String, required: true },    // e.g. "₹599"
+  category: { type: String, enum: CATEGORIES, required: true },
+  subcategory: { type: String, default: null },    // little-gabru, little-mutiyar, groom, bride, ...
 
-// GET single product by name (for detail page — your existing route uses /women/:name)
-router.get("/by-name/:name", async (req, res) => {
-  try {
-    const product = await Product.findOne({ name: decodeURIComponent(req.params.name) });
-    if (!product) return res.status(404).json({ error: "Not found" });
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  // ── Optional detail-page fields. If left empty the detail page still works and
+  //    falls back to an auto-generated description / default sizes. ──
+  description: { type: String, default: "" },
+  images: { type: [String], default: [] },         // extra gallery images
+  sizes: { type: [String], default: [] },          // e.g. ["6","7","8"]; empty = category default
+  material: { type: String, default: "" },
 
-// POST — add product (admin only)
-router.post("/", adminAuth, async (req, res) => {
-  try {
-    const product = new Product(req.body);
-    await product.save();
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  inStock: { type: Boolean, default: true },
+}, { timestamps: true });
 
-// PUT — edit product (admin only)
-router.put("/:id", adminAuth, async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+productSchema.index({ category: 1, subcategory: 1 });
 
-// DELETE — remove product (admin only)
-router.delete("/:id", adminAuth, async (req, res) => {
-  try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-module.exports = router;
+module.exports = mongoose.model("Product", productSchema);
+module.exports.CATEGORIES = CATEGORIES;
