@@ -36,6 +36,7 @@ mongoose.connect(process.env.SERVER_KEY)
   .catch((err) => console.log(err));
 
 app.use("/api/auth",     authRoutes);
+app.use("/api",          authRoutes);      // also serves /api/google-login, /api/login, /api/signup (older frontends)
 app.use("/api",          paymentRoutes);   // /api/create-order, /api/verify-payment
 app.use("/api/products", productRoutes);   // /api/products
 
